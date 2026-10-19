@@ -4,1450 +4,271 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>POSWD</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-/* ===== POSWD - estilos personalizados (complementa o Tailwind) ===== */
-
-body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-}
-
-/* Scrollbars discretas */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #374151; border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: #4b5563; }
-
-/* Botões de produto */
-.produto {
-    background: #1f2937;
-    border: 1px solid #374151;
-    border-radius: 0.75rem;
-    padding: 0.9rem 0.6rem;
-    text-align: center;
-    cursor: pointer;
-    transition: transform .08s ease, border-color .15s ease, background .15s ease;
-    user-select: none;
-}
-.produto:hover { border-color: #f59e0b; background: #263242; }
-.produto:active { transform: scale(0.95); }
-
-/* Botões de categoria */
-.tab-cat {
-    background: #1f2937;
-    border: 1px solid #374151;
-    color: #d1d5db;
-    border-radius: 999px;
-    padding: 0.35rem 1rem;
-    font-size: 0.8rem;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: all .15s ease;
-}
-.tab-cat:hover { border-color: #f59e0b; }
-.tab-cat.ativa { background: #f59e0b; color: #111827; border-color: #f59e0b; font-weight: 700; }
-
-/* Botões de método de pagamento */
-.metodo {
-    background: #1f2937;
-    border: 1px solid #374151;
-    border-radius: 0.6rem;
-    padding: 0.5rem 0.25rem;
-    font-size: 0.7rem;
-    line-height: 1.3;
-    cursor: pointer;
-    transition: all .15s ease;
-}
-.metodo:hover { border-color: #f59e0b; }
-.metodo.ativo { background: #f59e0b; color: #111827; border-color: #f59e0b; font-weight: 700; }
-
-/* Animação do toast */
-#toast { animation: subir .25s ease; }
-@keyframes subir {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Impressão: só a área de impressão (recibo ou comanda) */
-@media print {
-    body * { visibility: hidden; }
-    #areaImpressao, #areaImpressao * { visibility: visible; }
-    #areaImpressao {
-        display: block !important;
-        position: absolute; left: 0; top: 0; width: 100%;
-        background: #fff; color: #111;
-    }
-    .no-print { display: none !important; }
-}
-
-/* Botões de quantidade no carrinho */
-.qty {
-    width: 1.6rem; height: 1.6rem;
-    background: #374151; color: #fff;
-    border-radius: 0.4rem;
-    font-size: 0.9rem; line-height: 1;
-    cursor: pointer; transition: background .12s ease;
-}
-.qty:hover { background: #f59e0b; color: #111827; }
-.qty:active { transform: scale(0.9); }
-
-/* Botões mini (gestão de produtos) */
-.btn-mini {
-    width: 1.9rem; height: 1.9rem;
-    border-radius: 0.45rem;
-    font-size: 0.85rem; line-height: 1;
-    cursor: pointer; transition: background .12s ease;
-}
-.btn-mini:active { transform: scale(0.9); }
-
-    </style>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gray-900 text-white flex flex-col h-screen overflow-hidden select-none">
 
-    <!-- ============ TELA LOGIN ============ -->
-    <div id="tela-login" class="hidden flex-col items-center justify-center h-full p-6 bg-gray-900 absolute inset-0 z-[80]">
-        <div class="bg-gray-800 p-8 rounded-2xl border border-gray-700 w-full max-w-sm shadow-2xl text-center">
-            <span class="text-3xl">&#x26A1;</span>
-            <h1 class="text-2xl font-bold mt-2">POS<span class="text-amber-500">WD</span></h1>
-            <p class="text-xs text-gray-400 mt-1 mb-5">Inicie sessão para continuar.</p>
-            <label class="block text-left text-xs text-gray-400 mb-1">Caixa / Utilizador</label>
-            <select id="selCaixa" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 mb-3 focus:outline-none focus:border-amber-500"></select>
-            <label class="block text-left text-xs text-gray-400 mb-1">PIN (4 dígitos)</label>
-            <input id="inputPin" type="password" inputmode="numeric" maxlength="4" placeholder="&#x25CF;&#x25CF;&#x25CF;&#x25CF;"
-                class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-center text-xl tracking-[0.5em] focus:outline-none focus:border-amber-500 mb-3">
-            <p id="erroLogin" class="hidden text-xs text-red-400 mb-3">PIN incorreto. Tente novamente.</p>
-            <button id="btnEntrar" class="w-full bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-3 rounded-lg transition active:scale-95">&#x1F511; Entrar</button>
-            <p class="text-[11px] text-gray-500 mt-4">Caixa inicial: <b>Admin</b> · PIN <b>1234</b><br>(altere nas Definições de Caixas)</p>
-        </div>
-    </div>
-
-    <!-- ============ TELA ABERTURA DO DIA ============ -->
-    <div id="tela-dia" class="flex flex-col items-center justify-center h-full p-6 bg-gray-900 absolute inset-0 z-50">
+    <!-- TELA ABERTURA DO DIA -->
+    <div id="tela-dia" class="hidden flex flex-col items-center justify-center h-full p-6 bg-gray-900 absolute inset-0 z-50">
         <div class="bg-gray-800 p-8 rounded-2xl border border-gray-700 w-full max-w-sm shadow-2xl text-center">
             <span class="text-3xl">&#x26A1;</span>
             <h1 class="text-2xl font-bold mt-2">POS<span class="text-amber-500">WD</span></h1>
             <p class="text-xs text-gray-400 mt-1 mb-1">O dia está fechado.</p>
             <p class="text-xs text-gray-500 mb-4" id="infoUltimoFecho"></p>
-
-            <label class="block text-left text-xs text-gray-400 mb-1">Fundo de caixa inicial (MT)</label>
-            <input id="inputFundo" type="number" min="0" step="100" placeholder="0"
-                class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-lg text-center focus:outline-none focus:border-amber-500 mb-3">
-            <p id="erroAbertura" class="hidden text-xs text-red-400 mb-3">Introduza um valor válido (mínimo 0 MT).</p>
-
-            <button id="btnAbrirDia"
-                class="w-full bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-3 rounded-lg transition active:scale-95">
-                &#x1F513; Abrir Dia
-            </button>
-            <button id="btnHistDia" class="text-xs text-gray-400 hover:text-amber-400 mt-4 underline">Ver histórico de fechos</button>
+            <p class="text-xs text-gray-400 mb-3">Abertura do Dia — PIN do ADMIN ou CAIXA</p>
+            <input type="password" id="inputCodigoDia" placeholder="PIN de acesso" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-center text-xl tracking-widest text-amber-500 mb-3 focus:outline-none focus:border-amber-500">
+            <input type="number" id="inputAberturaMontante" placeholder="Montante de abertura (MT)" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-center text-xl text-emerald-400 mb-4 focus:outline-none focus:border-amber-500">
+            <button onclick="abrirDia()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition">Abrir o Dia</button>
         </div>
     </div>
 
-    <!-- ============ TELA FECHO DO DIA ============ -->
-    <div id="tela-fecho" class="hidden flex-col items-center justify-center h-full p-6 bg-gray-900/95 absolute inset-0 z-40">
-        <div class="bg-gray-800 p-8 rounded-2xl border border-gray-700 w-full max-w-md shadow-2xl">
-            <h2 class="text-xl font-bold text-center mb-1">&#x1F4C5; Fecho do Dia</h2>
-            <p class="text-xs text-gray-400 text-center mb-5" id="fechoPeriodo"></p>
-            <div id="fechoResumo" class="space-y-2 text-sm"></div>
-            <div class="flex gap-3 mt-6">
-                <button id="btnVoltarFecho"
-                    class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded-lg font-semibold transition active:scale-95">Voltar</button>
-                <button id="btnConfirmarFecho"
-                    class="flex-1 bg-red-600 hover:bg-red-500 py-3 rounded-lg font-bold transition active:scale-95">Confirmar Fecho</button>
-            </div>
+    <!-- TELA DE LOGIN -->
+    <div id="tela-login" class="hidden flex flex-col items-center justify-center h-full p-6 bg-gray-900 absolute inset-0 z-50">
+        <div class="bg-gray-800 p-8 rounded-2xl border border-gray-700 w-full max-w-sm shadow-2xl text-center">
+            <span class="text-3xl">&#x26A1;</span>
+            <h1 class="text-2xl font-bold mt-2">POS<span class="text-amber-500">WD</span></h1>
+            <p class="text-xs text-gray-400 mt-1 mb-6">Insira o seu código PIN para entrar</p>
+            <input type="password" id="inputCodigo" placeholder="PIN de acesso" class="w-full bg-gray-900 border border-gray-700 p-3 rounded-xl text-center text-xl tracking-widest text-amber-500 mb-4 focus:outline-none focus:border-amber-500">
+            <button onclick="autenticarPorCodigo()" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-3 rounded-xl transition">Entrar no Sistema</button>
+            <p id="infoLoginDia" class="text-xs text-gray-500 mt-3"></p>
         </div>
     </div>
 
-    <!-- ============ TELA ADMINISTRAÇÃO ============ -->
-    <div id="tela-admin" class="hidden absolute inset-0 z-40 bg-gray-900 overflow-y-auto">
-        <div class="max-w-3xl mx-auto p-6 pb-16">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-bold">&#x1F6E1;&#xFE0F; Administração</h2>
-                <button id="btnVoltarAdmin" class="bg-gray-700 hover:bg-gray-600 text-sm font-semibold px-4 py-2 rounded-lg transition active:scale-95">&larr; Voltar ao POS</button>
-            </div>
-
-            <!-- Estatísticas do dia -->
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Resumo do dia</h3>
-            <div class="grid grid-cols-3 gap-3 mb-6">
-                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 text-center">
-                    <div class="text-[11px] text-gray-400">Total vendido</div>
-                    <div id="admTotal" class="text-lg font-bold text-amber-400">0 MT</div>
-                </div>
-                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 text-center">
-                    <div class="text-[11px] text-gray-400">Nº de vendas</div>
-                    <div id="admVendas" class="text-lg font-bold">0</div>
-                </div>
-                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 text-center">
-                    <div class="text-[11px] text-gray-400">Ticket médio</div>
-                    <div id="admTicket" class="text-lg font-bold">0 MT</div>
-                </div>
-            </div>
-
-            <div class="grid sm:grid-cols-2 gap-3 mb-6">
-                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
-                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Vendas por método</h4>
-                    <div id="admMetodos" class="space-y-1 text-sm"></div>
-                </div>
-                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
-                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Top produtos (qtd)</h4>
-                    <div id="admTop" class="space-y-1 text-sm"></div>
-                </div>
-            </div>
-
-            <!-- Gestão -->
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Gestão</h3>
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-                <button id="admCaixas" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl p-4 text-sm font-semibold transition active:scale-95">&#x1F464;<br>Caixas</button>
-                <button id="admProdutos" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl p-4 text-sm font-semibold transition active:scale-95">&#x1F4E6;<br>Produtos</button>
-                <button id="admMesas" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl p-4 text-sm font-semibold transition active:scale-95">&#x1FA91;<br>Mesas</button>
-                <button id="admConfig" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl p-4 text-sm font-semibold transition active:scale-95">&#x2699;&#xFE0F;<br>Definições</button>
-                <button id="admHistorico" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl p-4 text-sm font-semibold transition active:scale-95">&#x1F4CB;<br>Fechos</button>
-            </div>
-
-            <!-- Dados -->
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Dados (backup e restauro)</h3>
-            <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 space-y-3">
-                <div class="flex flex-wrap gap-2">
-                    <button id="admCsv" class="bg-amber-500/90 hover:bg-amber-400 text-gray-900 text-xs font-bold px-4 py-2 rounded-lg transition active:scale-95">&#x2B07; Exportar fechos (CSV)</button>
-                    <button id="admBackup" class="bg-gray-700 hover:bg-gray-600 text-xs font-bold px-4 py-2 rounded-lg transition active:scale-95">&#x1F4BE; Backup completo (JSON)</button>
-                    <button id="admImportar" class="bg-gray-700 hover:bg-gray-600 text-xs font-bold px-4 py-2 rounded-lg transition active:scale-95">&#x1F4C2; Restaurar backup</button>
-                    <input type="file" id="fileImport" accept=".json,application/json" class="hidden">
-                </div>
-                <div class="border-t border-gray-700 pt-3">
-                    <button id="admReset" class="bg-red-900/60 hover:bg-red-700 text-xs font-bold px-4 py-2 rounded-lg transition active:scale-95">&#x26A0;&#xFE0F; Apagar todos os dados</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============ TELA PRINCIPAL POS ============ -->
-    <div id="tela-pos" class="hidden h-full flex-col">
-
-        <!-- Cabeçalho -->
-        <header class="flex items-center justify-between px-5 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
-            <div class="flex items-center gap-3">
-                <span class="text-xl">&#x26A1;</span>
+    <!-- APLICAÇÃO PRINCIPAL -->
+    <div id="app-container" class="flex flex-col h-screen hidden">
+        <header class="bg-gray-800 p-4 flex justify-between items-center shadow-md border-b border-gray-700">
+            <div class="flex items-center space-x-2">
+                <span class="text-amber-500 text-xl">&#x26A1;</span>
                 <h1 class="text-lg font-bold">POS<span class="text-amber-500">WD</span></h1>
-                <span id="estadoDia" class="text-xs bg-green-900 text-green-300 px-2 py-1 rounded-full"></span>
             </div>
-            <div class="flex items-center gap-2 sm:gap-4">
-                <span id="relogio" class="text-xs text-gray-400 hidden md:block"></span>
-                <span id="statsDia" class="text-xs text-gray-400 hidden sm:block"></span>
-                <span id="chipUser" class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full hidden sm:block"></span>
-                <button id="btnCaixas" title="Caixas"
-                    class="bg-gray-700 hover:bg-gray-600 text-xs font-bold px-3 py-2 rounded-lg transition active:scale-95">&#x1F464; Caixas</button>
-                <button id="btnLogout" title="Terminar sessão"
-                    class="bg-gray-700 hover:bg-red-700 text-xs font-bold px-3 py-2 rounded-lg transition active:scale-95">&#x1F6AA;</button>
-                <button id="btnProdutos" title="Produtos"
-                    class="bg-gray-700 hover:bg-gray-600 text-xs font-bold px-3 py-2 rounded-lg transition active:scale-95">&#x1F4E6; Produtos</button>
-                <button id="btnHistorico" title="Histórico"
-                    class="bg-gray-700 hover:bg-gray-600 text-xs font-bold px-3 py-2 rounded-lg transition active:scale-95">&#x1F4CB; Histórico</button>
-                <button id="btnConfig" title="Definições"
-                    class="bg-gray-700 hover:bg-gray-600 text-xs font-bold px-3 py-2 rounded-lg transition active:scale-95">&#x2699;&#xFE0F;</button>
-                <button id="btnAdmin" title="Administração"
-                    class="hidden bg-amber-500/90 hover:bg-amber-400 text-gray-900 text-xs font-bold px-3 py-2 rounded-lg transition active:scale-95">&#x1F6E1;&#xFE0F; Admin</button>
-                <button id="btnFecharDia"
-                    class="bg-red-600/90 hover:bg-red-500 text-xs font-bold px-4 py-2 rounded-lg transition active:scale-95">
-                    Fechar Dia
-                </button>
+            <div class="flex items-center gap-2">
+                <span id="infoSessao" class="bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-full text-xs font-semibold hidden"></span>
+                <span id="badgePerfil" class="bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded-full text-xs font-semibold uppercase"></span>
+                <button id="btnFecharDia" onclick="fecharDia()" class="bg-rose-700 hover:bg-rose-600 text-white px-2.5 py-1.5 rounded-lg text-xs hidden">Fechar o Dia</button>
+                <button onclick="logout()" class="bg-gray-700 hover:bg-rose-900 text-gray-300 hover:text-rose-200 px-2.5 py-1.5 rounded-lg text-xs" title="Fechar Sessão"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></button>
             </div>
         </header>
 
-        <main class="flex flex-1 overflow-hidden">
+        <nav id="navBar" class="bg-gray-800 flex justify-around border-b border-gray-700 text-xs font-medium"></nav>
 
-            <!-- Produtos -->
-            <section class="flex-1 flex flex-col overflow-hidden">
-                <div id="tabsCategorias" class="flex gap-2 px-4 pt-4 pb-2 overflow-x-auto shrink-0"></div>
-                <div id="gradeProdutos" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 p-4 overflow-y-auto"></div>
+        <main class="flex-1 overflow-y-auto p-4 relative">
+
+            <!-- MESAS -->
+            <section id="area-mesas-geral" class="hidden flex flex-col h-full">
+                <div id="sub-servente-mesas">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Gestão de Mesas e Zonas</h2>
+                    </div>
+                    <div id="filtroZonas" class="flex gap-2 overflow-x-auto pb-2 mb-3"></div>
+                    <div class="grid grid-cols-2 gap-3 pb-6" id="gridMesasServente"></div>
+                </div>
+                <div id="sub-servente-menu" class="hidden flex-col h-full">
+                    <div class="flex justify-between items-center mb-2">
+                        <button onclick="voltarParaMesas()" class="text-xs bg-gray-700 px-3 py-1.5 rounded-lg"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Voltar Mesas</button>
+                        <span id="tituloMesaAtiva" class="font-bold text-amber-500 text-sm"></span>
+                    </div>
+                    <div class="grid grid-cols-5 gap-1 bg-gray-800 p-1 rounded-xl mb-3 text-center text-[11px] font-bold">
+                        <button onclick="mudarCategoriaMenu('Entrada')" id="tabEntrada" class="py-2 rounded-lg bg-amber-500 text-black leading-tight">Entradas</button>
+                        <button onclick="mudarCategoriaMenu('Comida')" id="tabComida" class="py-2 rounded-lg text-gray-400 leading-tight">Comida</button>
+                        <button onclick="mudarCategoriaMenu('Sobremesa')" id="tabSobremesa" class="py-2 rounded-lg text-gray-400 leading-tight">Sobremesa</button>
+                        <button onclick="mudarCategoriaMenu('Bebida c/Álcool')" id="tabBebidaAlcool" class="py-2 rounded-lg text-gray-400 leading-tight">Bebidas<br>c/Álcool</button>
+                        <button onclick="mudarCategoriaMenu('Bebida s/Álcool')" id="tabBebidaNaoAlcool" class="py-2 rounded-lg text-gray-400 leading-tight">Bebidas<br>s/Álcool</button>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2.5 overflow-y-auto flex-1 pb-20" id="listaProdutosServente"></div>
+                    <div class="absolute bottom-2 left-4 right-4 bg-gray-800 border border-gray-700 p-3 rounded-xl flex justify-between items-center shadow-xl">
+                        <div>
+                            <span class="text-[10px] text-gray-400 block">Itens Selecionados</span>
+                            <span id="totalCarrinhoParcial" class="text-sm font-black text-amber-400">0.00 MT</span>
+                        </div>
+                        <button onclick="enviarComanda()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2.5 rounded-lg font-bold">Enviar Pedido</button>
+                    </div>
+                </div>
             </section>
 
-            <!-- Carrinho -->
-            <aside class="w-full sm:w-96 bg-gray-800 border-l border-gray-700 flex flex-col shrink-0">
-                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700 shrink-0">
-                    <h2 class="font-bold">&#x1F6D2; Comanda</h2>
-                    <button id="btnLimpar" class="text-xs text-red-400 hover:text-red-300">Limpar</button>
-                </div>
-                <div class="px-4 pt-3 shrink-0 space-y-2">
-                    <select id="selMesa" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500"></select>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button id="btnComanda" class="bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-xs font-bold py-2 rounded-lg transition active:scale-95">&#x1F5A8;&#xFE0F; Comanda</button>
-                        <button id="btnTransferir" class="bg-gray-700 hover:bg-gray-600 disabled:opacity-40 text-xs font-bold py-2 rounded-lg transition active:scale-95">&#x1F501; Transferir</button>
-                        <button id="btnMesas" class="bg-gray-700 hover:bg-gray-600 text-xs font-bold py-2 rounded-lg transition active:scale-95">&#x1FA91; Mesas</button>
-                    </div>
-                </div>
+            <!-- CAIXA -->
+            <section id="area-caixa" class="hidden">
+                <h2 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">Contas Prontas para Pagamento</h2>
+                <div class="space-y-3" id="listaContasCaixa"></div>
+            </section>
 
-                <div id="listaItens" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
-
-                <div class="border-t border-gray-700 p-4 space-y-3 shrink-0">
-                    <div class="flex justify-between text-sm text-gray-400">
-                        <span>Itens</span><span id="totalItens">0</span>
+            <!-- FATURAÇÃO -->
+            <section id="area-faturacao" class="hidden space-y-4">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center gap-2">
+                        <button onclick="voltarAoPainel()" class="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Voltar ao Painel</button>
+                        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Recibos e Facturação</h2>
                     </div>
-                    <div id="linhaIva" class="hidden flex justify-between text-xs text-gray-500">
-                        <span>IVA incluído</span><span id="ivaVenda">0 MT</span>
-                    </div>
-                    <div class="flex justify-between text-xl font-bold">
-                        <span>Total</span><span id="totalVenda" class="text-amber-400">0 MT</span>
-                    </div>
-
-                    <!-- Métodos de pagamento -->
-                    <div id="metodos" class="grid grid-cols-3 gap-2">
-                        <button data-metodo="DINHEIRO" class="metodo ativo">&#x1F4B5;<br>Dinheiro</button>
-                        <button data-metodo="CARTAO" class="metodo">&#x1F4B3;<br>Cartão</button>
-                        <button data-metodo="MULTICAIXA" class="metodo">&#x1F3E7;<br>Multicaixa</button>
-                    </div>
-
-                    <!-- Pagamento em dinheiro -->
-                    <div id="caixaDinheiro" class="space-y-2">
-                        <input id="inputRecebido" type="number" min="0" step="100" placeholder="Valor recebido (MT)"
-                            class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-center focus:outline-none focus:border-amber-500">
-                        <div class="flex justify-between text-sm bg-gray-900 rounded-lg px-3 py-2">
-                            <span class="text-gray-400">Troco</span>
-                            <span id="troco" class="font-bold text-green-400">0 MT</span>
-                        </div>
-                    </div>
-
-                    <button id="btnFinalizar"
-                        class="w-full bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-3 rounded-lg transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-                        disabled>
-                        &#x2705; Finalizar Venda
+                    <button onclick="exportarFacturasCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar CSV
                     </button>
                 </div>
-            </aside>
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="bg-gray-800 p-3 rounded-xl border border-gray-700">
+                        <span class="text-gray-400 block">Recibos Hoje</span>
+                        <span id="contadorFacturasHoje" class="text-lg font-black text-amber-400">0</span>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-xl border border-gray-700">
+                        <span class="text-gray-400 block">Total Hoje</span>
+                        <span id="totalFacturasHoje" class="text-lg font-black text-emerald-400">0.00 MT</span>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-xl border border-gray-700">
+                        <span class="text-gray-400 block">Total Geral</span>
+                        <span id="totalFacturasGeral" class="text-lg font-black text-blue-400">0.00 MT</span>
+                    </div>
+                </div>
+                <div class="flex gap-2 overflow-x-auto pb-2" id="filtroZonasFacturas"></div>
+                <div class="space-y-3" id="listaFacturas"></div>
+            </section>
+
+            <!-- DESPESAS -->
+            <section id="area-despesas" class="hidden space-y-4">
+                <div class="flex justify-between items-center">
+                    <button onclick="voltarAoPainel()" class="text-xs bg-gray-700 px-3 py-1.5 rounded-lg">Voltar ao Painel</button>
+                    <button onclick="abrirModalDespesa()" class="bg-rose-700 hover:bg-rose-600 text-xs px-3 py-2 rounded-lg font-bold">+ Registar Despesa</button>
+                </div>
+                <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Despesas</h2>
+                <div class="bg-gray-800 border border-gray-700 p-3 rounded-xl flex justify-between items-center">
+                    <span class="text-xs text-gray-400">Total registado hoje</span>
+                    <strong id="totalDespesasHoje" class="text-lg text-rose-400">0.00 MT</strong>
+                </div>
+                <div id="listaDespesas" class="space-y-2"></div>
+            </section>
+
+            <!-- HISTORICO DE DIAS -->
+            <section id="area-historico-dias" class="hidden space-y-4">
+                <div class="flex justify-between items-center">
+                    <button onclick="voltarAoPainel()" class="text-xs bg-gray-700 px-3 py-1.5 rounded-lg">Voltar ao Painel</button>
+                    <button onclick="exportarHistoricoDiasCSV()" class="bg-emerald-600 text-xs px-3 py-2 rounded-lg font-bold">Exportar CSV</button>
+                </div>
+                <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Histórico de Dias Fechados</h2>
+                <div id="listaHistoricoDias" class="space-y-2"></div>
+            </section>
+
+            <!-- CLIENTES -->
+            <section id="area-clientes" class="hidden space-y-4">
+                <div class="flex justify-between items-center">
+                    <button onclick="voltarAoPainel()" class="text-xs bg-gray-700 px-3 py-1.5 rounded-lg">Voltar ao Painel</button>
+                    <button onclick="abrirModalCliente()" class="bg-blue-600 text-xs px-3 py-2 rounded-lg font-bold">+ Novo Cliente</button>
+                </div>
+                <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Clientes</h2>
+                <input id="pesquisaClientes" oninput="renderClientes()" placeholder="Pesquisar nome ou telefone" class="w-full bg-gray-800 border border-gray-700 p-2.5 rounded-xl text-white">
+                <div id="listaClientes" class="space-y-2"></div>
+            </section>
+
+            <!-- DIVIDAS -->
+            <section id="area-dividas" class="hidden space-y-4">
+                <div class="flex justify-between items-center">
+                    <button onclick="voltarAoPainel()" class="text-xs bg-gray-700 px-3 py-1.5 rounded-lg">Voltar ao Painel</button>
+                    <strong id="totalDividasAbertas" class="text-rose-400 text-sm">0.00 MT</strong>
+                </div>
+                <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Dívidas de Clientes</h2>
+                <div id="listaDividas" class="space-y-2"></div>
+            </section>
+
+            <!-- SUPERVISOR -->
+            <section id="area-supervisor" class="hidden space-y-4">
+                <h2 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">Painel do Supervisor</h2>
+                <div class="grid grid-cols-1 gap-3">
+                    <button onclick="abrirModalProduto()" class="w-full bg-blue-600 hover:bg-blue-500 p-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Adicionar Produto / Stock
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <h3 class="text-xs text-gray-400 uppercase font-semibold mb-2">Gestão Rápida de Preços & Stock</h3>
+                    <div class="flex gap-2 overflow-x-auto pb-2 mb-2" id="filtroZonaProdutosSup"></div>
+                    <div id="listaProdutosSupervisor" class="space-y-2"></div>
+                </div>
+            </section>
+
+            <!-- ADMIN -->
+            <section id="area-admin" class="hidden space-y-4">
+                <h2 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">Painel Administrativo Total</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
+                        <svg class="icon icon-lg text-amber-500 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        <h4 class="font-bold text-sm">Faturamento</h4>
+                        <p class="text-lg font-black text-emerald-400">14.500 MT</p>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 text-center">
+                        <svg class="icon icon-lg text-amber-500 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <h4 class="font-bold text-sm">Equipe Ativa</h4>
+                        <p class="text-lg font-black text-blue-400" id="contadorFuncionarios">4</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-2">
+                    <button onclick="abrirModalNovaMesa()" class="w-full bg-emerald-600 hover:bg-emerald-500 p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg> Nova Mesa e Zona
+                    </button>
+                    <button onclick="abrirModalProduto()" class="w-full bg-purple-600 hover:bg-purple-500 p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg> Gerir Menu & Produtos
+                    </button>
+                    <button onclick="abrirGestaoEquipe()" class="w-full bg-indigo-600 hover:bg-indigo-500 p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg> Gestão de Funcionários
+                    </button>
+                    <button onclick="mostrarFaturacao()" class="w-full bg-amber-600 hover:bg-amber-500 p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Facturação
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <h3 class="text-xs text-gray-400 uppercase font-semibold mb-2">Lista Global de Produtos & Preços</h3>
+                    <div class="flex gap-2 overflow-x-auto pb-2 mb-2" id="filtroZonaProdutos"></div>
+                    <div id="listaProdutosAdmin" class="space-y-2"></div>
+                </div>
+            </section>
+
+            <!-- FORNECEDORES & ENTRADAS -->
+            <section id="area-fornecedores" class="hidden space-y-4">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center gap-2">
+                        <button onclick="voltarAoPainel()" class="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Voltar ao Painel</button>
+                        <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Fornecedores & Entradas de Produtos</h2>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="abrirModalNovoFornecedor()" class="w-full bg-emerald-600 hover:bg-emerald-500 p-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> Novo Fornecedor
+                    </button>
+                    <button onclick="abrirModalLancarFactura()" class="w-full bg-amber-600 hover:bg-amber-500 p-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Lançar Factura de Entrada
+                    </button>
+                </div>
+
+                <div>
+                    <h3 class="text-xs text-gray-400 uppercase font-semibold mb-2">Lista de Fornecedores</h3>
+                    <div id="listaFornecedores" class="space-y-2"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-xs text-gray-400 uppercase font-semibold mb-2">Facturas de Entrada (Compras)</h3>
+                    <div id="listaFacturasCompra" class="space-y-2 pb-6"></div>
+                </div>
+            </section>
+
+            <!-- GESTÃO DE EQUIPE -->
+            <section id="area-gestao-equipe" class="hidden space-y-4">
+                <div class="flex justify-between items-center mb-2">
+                    <button onclick="fecharGestaoEquipe()" class="text-xs bg-gray-700 px-3 py-1.5 rounded-lg"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Voltar ao Painel</button>
+                    <button onclick="abrirModalNovoFuncionario()" class="bg-emerald-600 hover:bg-emerald-500 text-xs px-3 py-1.5 rounded-lg font-bold"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Novo Funcionário</button>
+                </div>
+                <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Controlo de Equipe, Nomes e PINs</h2>
+                <div id="listaEquipeGestao" class="space-y-2.5 pb-6"></div>
+            </section>
+
         </main>
     </div>
 
-    <!-- Área de impressão (recibo / comanda) -->
-    <div id="areaImpressao" class="hidden"></div>
-
-    <!-- ============ MODAL RECIBO ============ -->
-    <div id="modalRecibo" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
-        <div class="bg-white text-gray-900 rounded-2xl w-full max-w-xs p-6 shadow-2xl" id="reciboConteudo"></div>
-        <div class="absolute bottom-6 left-0 right-0 flex justify-center gap-3 no-print">
-            <button id="btnImprimir" class="bg-gray-800 text-white px-5 py-2 rounded-lg text-sm font-semibold">&#x1F5A8; Imprimir</button>
-            <button id="btnFecharRecibo" class="bg-amber-500 text-gray-900 px-5 py-2 rounded-lg text-sm font-bold">Nova Venda</button>
-        </div>
-    </div>
-
-    <!-- ============ MODAL PRODUTOS (gestão) ============ -->
-    <div id="modalProdutos" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
-        <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[85vh]">
-            <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 shrink-0">
-                <h3 class="font-bold">&#x1F4E6; Gestão de Produtos</h3>
-                <button id="btnFecharProdutos" class="text-gray-400 hover:text-white text-xl leading-none">&times;</button>
-            </div>
-
-            <form id="formProduto" class="px-5 py-3 border-b border-gray-700 flex flex-wrap gap-2 shrink-0">
-                <input id="pNome" required placeholder="Nome" class="flex-1 min-w-[120px] bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
-                <input id="pPreco" required type="number" min="0" step="5" placeholder="Preço" class="w-24 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
-                <input id="pCat" required list="listaCats" placeholder="Categoria" class="flex-1 min-w-[100px] bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
-                <datalist id="listaCats"></datalist>
-                <select id="pDestino" class="bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
-                    <option value="" selected>Auto (Cozinha/Bar)</option>
-                    <option>Cozinha</option>
-                    <option>Bar</option>
-                    <option>Nenhum</option>
-                </select>
-                <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold px-4 rounded-lg text-sm transition active:scale-95">+ Add</button>
-            </form>
-
-            <div id="listaProdutos" class="overflow-y-auto p-3 space-y-2"></div>
-        </div>
-    </div>
-
-    <!-- ============ MODAL HISTÓRICO DE FECHOS ============ -->
-    <div id="modalHistorico" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
-        <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
-            <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 shrink-0">
-                <h3 class="font-bold">&#x1F4CB; Histórico de Fechos</h3>
-                <div class="flex items-center gap-3">
-                    <button id="btnExportCsv" class="text-xs bg-amber-500/90 hover:bg-amber-400 text-gray-900 font-bold px-3 py-1.5 rounded-lg transition active:scale-95">&#x2B07; CSV</button>
-                    <button id="btnFecharHistorico" class="text-gray-400 hover:text-white text-xl leading-none">&times;</button>
-                </div>
-            </div>
-            <div id="listaHistorico" class="overflow-y-auto p-3 space-y-2"></div>
-        </div>
-    </div>
-
-    <!-- ============ MODAL DEFINIÇÕES (IVA) ============ -->
-    <div id="modalConfig" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
-        <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="font-bold">&#x2699;&#xFE0F; Definições</h3>
-                <button id="btnFecharConfig" class="text-gray-400 hover:text-white text-xl leading-none">&times;</button>
-            </div>
-            <label class="block text-xs text-gray-400 mb-1">Nome da loja (cabeçalho do recibo)</label>
-            <input id="inputLoja" type="text" maxlength="40" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-center focus:outline-none focus:border-amber-500 mb-3">
-            <label class="block text-xs text-gray-400 mb-1">NUIT (opcional, no recibo)</label>
-            <input id="inputNuit" type="text" maxlength="20" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-center focus:outline-none focus:border-amber-500 mb-3">
-            <label class="block text-xs text-gray-400 mb-1">Taxa de IVA (%)</label>
-            <input id="inputIva" type="number" min="0" max="100" step="0.5" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-center focus:outline-none focus:border-amber-500 mb-1">
-            <p class="text-[11px] text-gray-500 mb-4">Taxa padrão em Moçambique: <b>16%</b>. Os preços são considerados <b>IVA incluído</b> e o valor é decomposto nas vendas e no recibo.</p>
-            <button id="btnGuardarConfig" class="w-full bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-2 rounded-lg transition active:scale-95">Guardar</button>
-        </div>
-    </div>
-
-    <!-- ============ MODAL CAIXAS ============ -->
-    <div id="modalCaixas" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
-        <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl flex flex-col max-h-[80vh]">
-            <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 shrink-0">
-                <h3 class="font-bold">&#x1F464; Funcionários</h3>
-                <button id="btnFecharCaixas" class="text-gray-400 hover:text-white text-xl leading-none">&times;</button>
-            </div>
-            <form id="formCaixa" class="px-5 py-3 border-b border-gray-700 grid grid-cols-[1fr_110px_auto] gap-2 shrink-0">
-                <input id="cNome" required placeholder="Nome do funcionário" class="bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
-                <select id="cCargo" class="bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
-                    <option>Gerente</option>
-                    <option>Supervisor</option>
-                    <option selected>Caixa</option>
-                    <option>Servente de mesa</option>
-                    <option>Barman</option>
-                </select>
-                <input id="cPin" required type="password" inputmode="numeric" maxlength="4" placeholder="PIN" class="bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:border-amber-500">
-                <button type="submit" class="col-span-3 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-2 rounded-lg text-sm transition active:scale-95">+ Adicionar funcionário</button>
-            </form>
-            <div id="listaCaixas" class="overflow-y-auto p-3 space-y-2"></div>
-        </div>
-    </div>
-
-    <!-- ============ MODAL MESAS (áreas e mesas) ============ -->
-    <div id="modalMesas" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
-        <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[85vh]">
-            <div class="flex items-center justify-between px-5 py-3 border-b border-gray-700 shrink-0">
-                <h3 class="font-bold">&#x1FA91; Áreas e Mesas</h3>
-                <button id="btnFecharMesas" class="text-gray-400 hover:text-white text-xl leading-none">&times;</button>
-            </div>
-            <form id="formArea" class="px-5 py-3 border-b border-gray-700 flex gap-2 shrink-0">
-                <input id="aNome" required placeholder="Nova área (ex.: Esplanada)" class="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
-                <button type="submit" class="bg-gray-700 hover:bg-gray-600 font-bold px-4 rounded-lg text-sm transition active:scale-95">+ Área</button>
-            </form>
-            <form id="formMesa" class="px-5 py-3 border-b border-gray-700 grid grid-cols-[1fr_110px_auto] gap-2 shrink-0">
-                <input id="mNome" required placeholder="Nova mesa (ex.: M4)" class="bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
-                <select id="mArea" class="bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-500"></select>
-                <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold px-4 rounded-lg text-sm transition active:scale-95">+ Mesa</button>
-            </form>
-            <div id="listaMesas" class="overflow-y-auto p-3 space-y-2"></div>
-        </div>
-    </div>
-
-    <!-- ============ MODAL TRANSFERÊNCIA ============ -->
-    <div id="modalTransferir" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
-        <div class="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl p-5">
-            <h3 class="font-bold mb-1">&#x1F501; Transferir itens</h3>
-            <p class="text-xs text-gray-400 mb-3" id="transOrigem"></p>
-            <label class="block text-xs text-gray-400 mb-1">Para a mesa:</label>
-            <select id="transDestino" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:border-amber-500"></select>
-            <div id="transItens" class="space-y-2 max-h-56 overflow-y-auto mb-4"></div>
-            <div class="flex gap-3">
-                <button id="btnCancelarTrans" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg text-sm font-semibold transition active:scale-95">Cancelar</button>
-                <button id="btnConfirmarTrans" class="flex-1 bg-amber-500 hover:bg-amber-400 text-gray-900 py-2 rounded-lg text-sm font-bold transition active:scale-95">Transferir</button>
+    <!-- MODAL GENÉRICO -->
+    <div id="modalGenerico" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 w-full max-w-sm shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 id="modalTitulo" class="font-bold text-base mb-3 text-amber-500">Editar</h3>
+            <div id="modalConteudo" class="space-y-3"></div>
+            <div class="flex gap-2 mt-4">
+                <button onclick="fecharModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2.5 rounded-xl font-bold text-xs">Cancelar</button>
+                <button id="modalBtnSalvar" class="flex-1 bg-amber-500 hover:bg-amber-400 text-black py-2.5 rounded-xl font-bold text-xs">Salvar</button>
             </div>
         </div>
     </div>
 
-    <!-- Toast -->
-    <div id="toast" class="hidden fixed bottom-6 right-6 z-[70] bg-gray-800 border border-amber-500 text-sm px-5 py-3 rounded-lg shadow-2xl"></div>
-
-    <script>
-/* =====================================================
-   POSWD - Ponto de Venda (PWA, offline) — Moçambique
-   Moeda: Metical (MT) · IVA padrão: 16% · Recibo com NUIT
-   localStorage: poswd_estado | poswd_produtos | poswd_historico
-                 poswd_config | poswd_caixas
-   sessionStorage: poswd_sessao (caixa autenticada)
-===================================================== */
-
-// ---------- Catálogo inicial (seeding) — preços em MT ----------
-const PRODUTOS_INICIAIS = [
-    { id: 1,  nome: 'Café',              preco: 30,  cat: 'Cafetaria' },
-    { id: 2,  nome: 'Chá',               preco: 25,  cat: 'Cafetaria' },
-    { id: 3,  nome: 'Cappuccino',        preco: 60,  cat: 'Cafetaria' },
-    { id: 4,  nome: 'Pão',               preco: 10,  cat: 'Pastelaria' },
-    { id: 5,  nome: 'Chamussa',          preco: 20,  cat: 'Pastelaria' },
-    { id: 6,  nome: 'Pastel',            preco: 25,  cat: 'Pastelaria' },
-    { id: 7,  nome: 'Bolo fatia',        preco: 40,  cat: 'Pastelaria' },
-    { id: 8,  nome: 'Água 0,5L',         preco: 30,  cat: 'Bebidas' },
-    { id: 9,  nome: 'Refrigerante',      preco: 50,  cat: 'Bebidas' },
-    { id: 10, nome: 'Sumo natural',      preco: 60,  cat: 'Bebidas' },
-    { id: 11, nome: 'Sandes',            preco: 80,  cat: 'Lanches' },
-    { id: 12, nome: 'Xima c/ Caril',     preco: 150, cat: 'Refeições' },
-    { id: 13, nome: 'Matapa c/ Arroz',   preco: 180, cat: 'Refeições' },
-    { id: 14, nome: 'Frango c/ Xima',    preco: 250, cat: 'Refeições' },
-];
-const CAIXAS_INICIAIS = [{ id: 1, nome: 'Admin', pin: '1234', cargo: 'Gerente' }];
-const CARGOS = ['Gerente', 'Supervisor', 'Caixa', 'Servente de mesa', 'Barman'];
-const AREAS_INICIAIS = [
-    { id: 1, nome: 'Sala' },
-    { id: 2, nome: 'Esplanada' },
-    { id: 3, nome: 'Bar' },
-];
-const MESAS_INICIAIS = [
-    { id: 11, areaId: 1, nome: 'M1' },
-    { id: 12, areaId: 1, nome: 'M2' },
-    { id: 13, areaId: 1, nome: 'M3' },
-    { id: 21, areaId: 2, nome: 'E1' },
-    { id: 22, areaId: 2, nome: 'E2' },
-    { id: 31, areaId: 3, nome: 'B1' },
-];
-
-// ---------- Estado ----------
-let produtos = [];
-let config = { iva: 16, loja: 'POSWD', nuit: '' };
-let estado = {
-    aberto: false, abertoEm: null, fundo: 0,
-    vendas: [], comandas: {}, mesaAtual: null,
-    metodo: 'DINHEIRO', categoria: 'Tudo',
-};
-
-// ---------- Utilitários ----------
-const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-// Formatação de números em Moçambique: 1 234,56 MT
-function num(v) {
-    try { return Number(v).toLocaleString('pt-MZ', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
-    catch (e) { return Number(v).toLocaleString('pt-PT', { maximumFractionDigits: 2 }); }
-}
-const fmt = (v) => `${num(v)} MT`;
-
-const sessao = () => sessionStorage.getItem('poswd_sessao');
-const areas = () => lerJSON('poswd_areas', []);
-const mesas = () => lerJSON('poswd_mesas', []);
-const itensAtuais = () => estado.comandas[estado.mesaAtual] || [];
-const totalMesa = (id) => (estado.comandas[id] || []).reduce((s, i) => s + i.preco * i.qtd, 0);
-const mesaLabel = (id) => {
-    const m = mesas().find(x => x.id === id);
-    const a = m && areas().find(x => x.id === m.areaId);
-    return m ? `${m.nome}${a ? ' · ' + a.nome : ''}` : '—';
-};
-const totalCarrinho = () => totalMesa(estado.mesaAtual);
-const totalVendido = () => estado.vendas.reduce((s, v) => s + v.total, 0);
-const ivaDe = (total, taxa) => taxa > 0 ? total - total / (1 + taxa / 100) : 0;
-const dataHora = (iso) => new Date(iso).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-
-function lerJSON(chave, fallback) {
-    try { const v = JSON.parse(localStorage.getItem(chave)); return v ?? fallback; }
-    catch (e) { return fallback; }
-}
-function carregar() {
-    estado = { ...estado, ...lerJSON('poswd_estado', {}) };
-    produtos = lerJSON('poswd_produtos', null) || PRODUTOS_INICIAIS.slice();
-    config = { ...config, ...lerJSON('poswd_config', {}) };
-    if (!lerJSON('poswd_caixas', null)) localStorage.setItem('poswd_caixas', JSON.stringify(CAIXAS_INICIAIS));
-    // Migração: caixas antigos sem cargo recebem um cargo por omissão
-    const cs = caixas().map(c => ({ cargo: c.nome === 'Admin' ? 'Gerente' : 'Caixa', ...c }));
-    guardarCaixas(cs);
-    // Áreas e mesas (com valores iniciais)
-    if (!lerJSON('poswd_areas', null)) localStorage.setItem('poswd_areas', JSON.stringify(AREAS_INICIAIS));
-    if (!lerJSON('poswd_mesas', null)) localStorage.setItem('poswd_mesas', JSON.stringify(MESAS_INICIAIS));
-    // Migração: carrinho global antigo → comanda da primeira mesa
-    estado.comandas = estado.comandas || {};
-    if (Array.isArray(estado.carrinho)) {
-        if (estado.carrinho.length && mesas().length) estado.comandas[mesas()[0].id] = estado.carrinho;
-        delete estado.carrinho;
-        guardar();
-    }
-    if (!mesas().some(m => m.id === estado.mesaAtual)) estado.mesaAtual = mesas()[0] ? mesas()[0].id : null;
-    guardarProdutos();
-}
-function guardar()        { localStorage.setItem('poswd_estado', JSON.stringify(estado)); }
-function guardarProdutos() { localStorage.setItem('poswd_produtos', JSON.stringify(produtos)); }
-function guardarConfig()  { localStorage.setItem('poswd_config', JSON.stringify(config)); }
-function caixas()         { return lerJSON('poswd_caixas', CAIXAS_INICIAIS); }
-function guardarCaixas(l) { localStorage.setItem('poswd_caixas', JSON.stringify(l)); }
-function historico()      { return lerJSON('poswd_historico', []); }
-
-function toast(msg) {
-    const t = $('toast');
-    t.textContent = msg;
-    t.classList.remove('hidden');
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.add('hidden'), 2200);
-}
-const categorias = () => ['Tudo', ...new Set(produtos.map(p => p.cat))];
-const DESTINOS = ['Cozinha', 'Bar', 'Nenhum'];
-// Por omissão: Bebidas → Bar, restantes → Cozinha (pode ser alterado por produto)
-const destinoDe = (p) => p.destino || (p.cat === 'Bebidas' ? 'Bar' : 'Cozinha');
-const emojiDestino = (p) => { const d = destinoDe(p); return d === 'Cozinha' ? '\u{1F373}' : d === 'Bar' ? '\u{1F378}' : ''; };
-const linha = (k, v, cls = '') =>
-    `<div class="flex justify-between"><span class="text-gray-400">${k}</span><span class="${cls}">${v}</span></div>`;
-
-// ---------- Troca de ecrãs ----------
-function mostrar(id) {
-    ['tela-dia', 'tela-fecho', 'tela-admin'].forEach(t => {
-        const el = $(t);
-        el.classList.toggle('hidden', t !== id);
-        el.classList.toggle('flex', t === id);
-    });
-    const pos = $('tela-pos');
-    pos.classList.toggle('hidden', id !== 'tela-pos');
-    pos.classList.toggle('flex', id === 'tela-pos');
-}
-function mostrarLogin(mostrarTela) {
-    const l = $('tela-login');
-    l.classList.toggle('hidden', !mostrarTela);
-    l.classList.toggle('flex', mostrarTela);
-    if (mostrarTela) {
-        const lista = caixas();
-        $('selCaixa').innerHTML = lista.map(c => `<option value="${c.id}">${esc(c.nome)} — ${esc(c.cargo || 'Caixa')}</option>`).join('');
-        $('inputPin').value = '';
-        $('erroLogin').classList.add('hidden');
-        setTimeout(() => $('inputPin').focus(), 50);
-    }
-}
-
-// ---------- Login / Caixas ----------
-function entrar() {
-    const id = Number($('selCaixa').value);
-    const pin = $('inputPin').value.trim();
-    const c = caixas().find(x => x.id === id);
-    if (!c || c.pin !== pin) {
-        $('erroLogin').classList.remove('hidden');
-        $('inputPin').value = '';
-        return;
-    }
-    sessionStorage.setItem('poswd_sessao', c.nome);
-    iniciar();
-    toast(`Sessão iniciada: ${c.nome}`);
-}
-
-function sair() {
-    sessionStorage.removeItem('poswd_sessao');
-    location.reload();
-}
-
-function renderListaCaixas() {
-    const atual = sessao();
-    const lista = caixas();
-    const nGerentes = lista.filter(c => nivelDe(c) >= 3).length;
-    $('listaCaixas').innerHTML = lista.map(c => {
-        const podeApagar = c.nome !== atual && !(nivelDe(c) >= 3 && nGerentes <= 1);
-        return `
-        <div class="flex items-center gap-2 bg-gray-900 rounded-lg p-2">
-            <div class="flex-1 min-w-0">
-                <span class="text-sm font-semibold">${esc(c.nome)} ${c.nome === atual ? '<span class="text-xs text-green-400">● sessão</span>' : ''}</span>
-                <span class="text-xs text-amber-400/80"> · ${esc(c.cargo || 'Caixa')}</span>
-            </div>
-            ${podeApagar ? `<button data-id="${c.id}" class="btn-mini bg-gray-700 hover:bg-red-700" title="Eliminar funcionário">&#x1F5D1;</button>` : ''}
-        </div>`;
-    }).join('');
-}
-
-function addCaixa(e) {
-    e.preventDefault();
-    if (nivel() < 3) { toast('Só o Gerente pode gerir funcionários.'); return; }
-    const nome = $('cNome').value.trim();
-    const pin = $('cPin').value.trim();
-    const cargo = $('cCargo').value;
-    if (!nome || !/^\d{4}$/.test(pin)) { toast('Nome, cargo e PIN de 4 dígitos são obrigatórios.'); return; }
-    const lista = caixas();
-    if (lista.some(c => c.nome.toLowerCase() === nome.toLowerCase())) { toast('Já existe um funcionário com esse nome.'); return; }
-    lista.push({ id: Date.now(), nome, pin, cargo });
-    guardarCaixas(lista);
-    $('formCaixa').reset();
-    renderListaCaixas();
-    toast(`${cargo} "${nome}" adicionado.`);
-}
-
-function cliqueCaixas(e) {
-    const b = e.target.closest('[data-id]');
-    if (!b) return;
-    if (nivel() < 3) { toast('Só o Gerente pode gerir funcionários.'); return; }
-    const id = Number(b.dataset.id);
-    const lista = caixas();
-    const c = lista.find(x => x.id === id);
-    if (!c) return;
-    if (c.nome === sessao()) { toast('Não pode eliminar o próprio utilizador.'); return; }
-    const nGerentes = lista.filter(x => nivelDe(x) >= 3).length;
-    if (nivelDe(c) >= 3 && nGerentes <= 1) { toast('Tem de existir pelo menos um Gerente.'); return; }
-    if (!confirm(`Eliminar ${c.cargo || 'o funcionário'} "${c.nome}"?`)) return;
-    guardarCaixas(lista.filter(x => x.id !== id));
-    renderListaCaixas();
-    toast(`Funcionário "${c.nome}" eliminado.`);
-}
-
-// ---------- Arranque pós-login ----------
-function iniciar() {
-    mostrarLogin(false);
-    const eu = caixas().find(x => x.nome === sessao());
-    $('chipUser').textContent = `👤 ${sessao()}${eu && eu.cargo ? ' · ' + eu.cargo : ''}`;
-    renderAbertura();
-    if (estado.aberto) entrarPOS();
-    else mostrar('tela-dia');
-}
-
-// ---------- Abertura do dia ----------
-function renderAbertura() {
-    const hist = historico();
-    $('infoUltimoFecho').textContent = hist.length
-        ? `Último fecho: ${dataHora(hist[hist.length - 1].fechadoEm)} · ${fmt(hist[hist.length - 1].total)}`
-        : 'Ainda não existem fechos registados.';
-}
-
-function abrirDia() {
-    const fundo = parseFloat($('inputFundo').value);
-    if (isNaN(fundo) || fundo < 0) {
-        $('erroAbertura').classList.remove('hidden');
-        return;
-    }
-    estado = { aberto: true, abertoEm: new Date().toISOString(), fundo, vendas: [], comandas: {}, mesaAtual: mesas()[0] ? mesas()[0].id : null, metodo: 'DINHEIRO', categoria: 'Tudo' };
-    guardar();
-    entrarPOS();
-    toast(`Dia aberto com fundo de ${fmt(fundo)}`);
-}
-
-// ---------- POS ----------
-function entrarPOS() {
-    mostrar('tela-pos');
-    $('estadoDia').textContent = '● Aberto';
-    const nv = nivel();
-    $('btnAdmin').classList.toggle('hidden', nv < 2);          // Gerente + Supervisor
-    $('btnFecharDia').classList.toggle('hidden', nv < 1);      // Caixa, Gerente, Supervisor
-    $('btnCaixas').classList.toggle('hidden', nv < 3);         // só Gerente
-    $('btnConfig').classList.toggle('hidden', nv < 3);         // só Gerente
-    $('btnMesas').classList.toggle('hidden', nv < 3);            // só Gerente
-    $('btnProdutos').classList.toggle('hidden', nv < 3);         // só Gerente
-    $('btnTransferir').classList.toggle('hidden', nv < 3);       // só Gerente
-    renderMesasUI();
-    renderTabs();
-    renderProdutos();
-    renderCarrinho();
-    renderStats();
-}
-
-function renderTabs() {
-    if (!categorias().includes(estado.categoria)) estado.categoria = 'Tudo';
-    $('tabsCategorias').innerHTML = categorias().map(c =>
-        `<button class="tab-cat ${c === estado.categoria ? 'ativa' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`
-    ).join('');
-}
-
-function renderProdutos() {
-    const lista = estado.categoria === 'Tudo' ? produtos : produtos.filter(p => p.cat === estado.categoria);
-    $('gradeProdutos').innerHTML = lista.length ? lista.map(p => `
-        <button class="produto" data-id="${p.id}">
-            <div class="text-sm font-semibold">${esc(p.nome)}</div>
-            <div class="text-amber-400 font-bold mt-1">${fmt(p.preco)}</div>
-            <div class="text-[10px] mt-0.5 opacity-70">${emojiDestino(p)}</div>
-        </button>`).join('')
-        : '<p class="col-span-full text-center text-gray-500 text-sm py-8">Sem produtos nesta categoria.</p>';
-}
-
-function adicionarItem(id) {
-    const p = produtos.find(x => x.id === id);
-    if (!p) return;
-    if (!estado.mesaAtual) { toast('Crie ou selecione uma mesa primeiro (🪑 Mesas).'); return; }
-    const its = itensAtuais();
-    const linha = its.find(i => i.id === id);
-    if (linha) linha.qtd++;
-    else its.push({ id: p.id, nome: p.nome, preco: p.preco, qtd: 1 });
-    guardar();
-    renderCarrinho();
-}
-
-function renderCarrinho() {
-    const c = itensAtuais();
-    $('listaItens').innerHTML = c.length ? c.map((i, idx) => `
-        <div class="flex items-center gap-2 bg-gray-900 rounded-lg p-2">
-            <div class="flex-1 min-w-0">
-                <div class="text-sm truncate">${esc(i.nome)}</div>
-                <div class="text-xs text-amber-400">${fmt(i.preco)}</div>
-            </div>
-            <div class="flex items-center gap-1">
-                <button class="qty" data-idx="${idx}" data-op="-1">−</button>
-                <span class="w-6 text-center text-sm font-bold">${i.qtd}</span>
-                <button class="qty" data-idx="${idx}" data-op="1">+</button>
-            </div>
-            <div class="w-20 text-right text-sm font-semibold">${fmt(i.preco * i.qtd)}</div>
-        </div>`).join('')
-        : '<p class="text-center text-gray-500 text-sm py-8">Sem itens nesta mesa.<br>Toque num produto para adicionar.</p>';
-
-    $('totalItens').textContent = c.reduce((s, i) => s + i.qtd, 0);
-    const total = totalCarrinho();
-    $('totalVenda').textContent = fmt(total);
-    const comIva = config.iva > 0;
-    $('linhaIva').classList.toggle('hidden', !comIva);
-    if (comIva) $('ivaVenda').textContent = fmt(ivaDe(total, config.iva));
-    renderMesasUI();
-    atualizarTroco();
-}
-
-function atualizarTroco() {
-    const dinheiro = estado.metodo === 'DINHEIRO';
-    $('caixaDinheiro').classList.toggle('hidden', !dinheiro);
-    if (dinheiro) {
-        const rec = parseFloat($('inputRecebido').value) || 0;
-        $('troco').textContent = fmt(Math.max(0, rec - totalCarrinho()));
-    }
-    validarFinalizar();
-}
-
-function validarFinalizar() {
-    const temItens = itensAtuais().length > 0;
-    let ok = temItens;
-    if (estado.metodo === 'DINHEIRO') {
-        const rec = parseFloat($('inputRecebido').value) || 0;
-        ok = temItens && rec >= totalCarrinho() && totalCarrinho() > 0;
-    }
-    $('btnFinalizar').disabled = !ok;
-}
-
-function finalizarVenda() {
-    const total = totalCarrinho();
-    if (!total) return;
-    const recebido = estado.metodo === 'DINHEIRO' ? (parseFloat($('inputRecebido').value) || 0) : total;
-    if (estado.metodo === 'DINHEIRO' && recebido < total) return;
-
-    const venda = {
-        id: estado.vendas.length + 1,
-        dataEm: new Date().toISOString(),
-        caixa: sessao() || '—',
-        mesa: mesaLabel(estado.mesaAtual),
-        itens: itensAtuais().map(i => ({ ...i })),
-        total,
-        iva: ivaDe(total, config.iva),
-        metodo: estado.metodo,
-        recebido,
-        troco: Math.max(0, recebido - total),
-    };
-    estado.vendas.push(venda);
-    estado.comandas[estado.mesaAtual] = [];
-    guardar();
-
-    $('inputRecebido').value = '';
-    renderCarrinho();
-    renderStats();
-    mostrarRecibo(venda);
-}
-
-function mostrarRecibo(v) {
-    const comIva = v.iva > 0;
-    $('reciboConteudo').innerHTML = `
-        <div class="text-center border-b border-dashed border-gray-400 pb-3 mb-3">
-            <h3 class="font-bold text-lg">${esc(config.loja || 'POSWD')}</h3>
-            ${config.nuit ? `<p class="text-xs text-gray-500">NUIT: ${esc(config.nuit)}</p>` : ''}
-            <p class="text-xs text-gray-500">${dataHora(v.dataEm)} · Venda #${v.id}</p>
-            <p class="text-xs text-gray-500">Mesa: ${esc(v.mesa || '—')}</p>
-            <p class="text-xs text-gray-500">Atendido por: ${esc(v.caixa)}</p>
-        </div>
-        ${v.itens.map(i => `
-            <div class="flex justify-between text-sm py-0.5">
-                <span>${i.qtd}× ${esc(i.nome)}</span><span>${fmt(i.preco * i.qtd)}</span>
-            </div>`).join('')}
-        <div class="border-t border-dashed border-gray-400 mt-2 pt-2 space-y-1 text-sm">
-            ${comIva ? `<div class="flex justify-between text-gray-600"><span>IVA incluído (${config.iva}%)</span><span>${fmt(v.iva)}</span></div>` : ''}
-            <div class="flex justify-between font-bold text-base"><span>Total</span><span>${fmt(v.total)}</span></div>
-            <div class="flex justify-between text-gray-600"><span>${v.metodo}</span><span>${fmt(v.recebido)}</span></div>
-            ${v.metodo === 'DINHEIRO' ? `<div class="flex justify-between text-gray-600"><span>Troco</span><span>${fmt(v.troco)}</span></div>` : ''}
-        </div>
-        <p class="text-center text-xs text-gray-400 mt-4">Obrigado pela preferência!</p>`;
-    $('modalRecibo').classList.remove('hidden');
-}
-
-
-// ---------- Áreas e Mesas ----------
-function renderMesasUI() {
-    const ms = mesas(), ars = areas();
-    $('selMesa').innerHTML = ars.map(a => {
-        const doArea = ms.filter(m => m.areaId === a.id);
-        if (!doArea.length) return '';
-        return `<optgroup label="${esc(a.nome)}">` + doArea.map(m => {
-            const its = estado.comandas[m.id] || [];
-            const n = its.reduce((s, i) => s + i.qtd, 0);
-            return `<option value="${m.id}" ${m.id === estado.mesaAtual ? 'selected' : ''}>${esc(m.nome)}${n ? ` · ${n} itens · ${fmt(totalMesa(m.id))}` : ''}</option>`;
-        }).join('') + '</optgroup>';
-    }).join('');
-    $('btnTransferir').disabled = !itensAtuais().length;
-    $('btnComanda').disabled = !itensAtuais().length;
-}
-
-function renderModalMesas() {
-    $('listaMesas').innerHTML = areas().map(a => {
-        const doArea = mesas().filter(m => m.areaId === a.id);
-        return `
-        <div class="bg-gray-900 rounded-lg p-3">
-            <div class="flex items-center justify-between mb-2">
-                <span class="font-semibold text-sm">&#x1F4CD; ${esc(a.nome)}</span>
-                <button data-tipo="area" data-id="${a.id}" class="btn-mini bg-gray-700 hover:bg-red-700" title="Eliminar área (tem de estar vazia)">&#x1F5D1;</button>
-            </div>
-            <div class="flex flex-wrap gap-2">
-                ${doArea.length ? doArea.map(m => {
-                    const n = (estado.comandas[m.id] || []).reduce((s, i) => s + i.qtd, 0);
-                    return `<span class="inline-flex items-center gap-1 bg-gray-800 border border-gray-600 rounded-lg px-2 py-1 text-xs">${esc(m.nome)}${n ? ` <b class="text-amber-400">${n} itens</b>` : ''}
-                        <button data-tipo="mesa" data-id="${m.id}" class="text-red-400 hover:text-red-300 font-bold" title="Eliminar mesa">&times;</button></span>`;
-                }).join('') : '<span class="text-xs text-gray-500">Sem mesas nesta área</span>'}
-            </div>
-        </div>`;
-    }).join('') || '<p class="text-center text-gray-500 text-sm py-4">Sem áreas. Crie a primeira acima.</p>';
-    $('mArea').innerHTML = areas().map(a => `<option value="${a.id}">${esc(a.nome)}</option>`).join('');
-}
-
-function addArea(e) {
-    e.preventDefault();
-    if (nivel() < 3) { toast('Só o Gerente pode gerir áreas.'); return; }
-    const nome = $('aNome').value.trim();
-    if (!nome) return;
-    const ars = areas();
-    if (ars.some(a => a.nome.toLowerCase() === nome.toLowerCase())) { toast('Essa área já existe.'); return; }
-    ars.push({ id: Date.now(), nome });
-    localStorage.setItem('poswd_areas', JSON.stringify(ars));
-    $('formArea').reset();
-    renderModalMesas(); renderMesasUI();
-    toast(`Área "${nome}" criada.`);
-}
-
-function addMesa(e) {
-    e.preventDefault();
-    if (nivel() < 3) { toast('Só o Gerente pode gerir mesas.'); return; }
-    const nome = $('mNome').value.trim();
-    const areaId = Number($('mArea').value);
-    if (!nome) return;
-    const ms = mesas();
-    if (ms.some(m => m.nome.toLowerCase() === nome.toLowerCase() && m.areaId === areaId)) { toast('Essa mesa já existe nesta área.'); return; }
-    ms.push({ id: Date.now(), areaId, nome });
-    localStorage.setItem('poswd_mesas', JSON.stringify(ms));
-    if (!estado.mesaAtual) { estado.mesaAtual = ms[ms.length - 1].id; guardar(); }
-    $('formMesa').reset();
-    renderModalMesas(); renderMesasUI();
-    toast(`Mesa "${nome}" adicionada.`);
-}
-
-function cliqueMesas(e) {
-    const b = e.target.closest('[data-tipo]');
-    if (!b) return;
-    if (nivel() < 3) { toast('Só o Gerente pode gerir mesas.'); return; }
-    const tipo = b.dataset.tipo, id = Number(b.dataset.id);
-    if (tipo === 'mesa') {
-        const m = mesas().find(x => x.id === id);
-        if (!m) return;
-        const n = (estado.comandas[id] || []).reduce((s, i) => s + i.qtd, 0);
-        if (!confirm(`Eliminar a mesa "${m.nome}"?${n ? ` Tem ${n} itens em aberto que serão perdidos.` : ''}`)) return;
-        localStorage.setItem('poswd_mesas', JSON.stringify(mesas().filter(x => x.id !== id)));
-        delete estado.comandas[id];
-        if (estado.mesaAtual === id) estado.mesaAtual = mesas()[0] ? mesas()[0].id : null;
-        guardar();
-    } else {
-        const doArea = mesas().filter(x => x.areaId === id);
-        if (doArea.length) { toast('Elimine primeiro as mesas desta área.'); return; }
-        const a = areas().find(x => x.id === id);
-        if (!confirm(`Eliminar a área "${a.nome}"?`)) return;
-        localStorage.setItem('poswd_areas', JSON.stringify(areas().filter(x => x.id !== id)));
-    }
-    renderModalMesas(); renderMesasUI(); renderCarrinho();
-}
-
-// ---------- Transferência de itens entre mesas ----------
-function abrirTransferencia() {
-    if (nivel() < 3) { toast('Só o Gerente pode transferir itens entre mesas.'); return; }
-    const its = itensAtuais();
-    if (!its.length) { toast('A mesa atual não tem itens.'); return; }
-    const destinos = mesas().filter(m => m.id !== estado.mesaAtual);
-    if (!destinos.length) { toast('Crie outra mesa para poder transferir.'); return; }
-    $('transOrigem').textContent = `De: ${mesaLabel(estado.mesaAtual)}`;
-    $('transDestino').innerHTML = destinos.map(m => `<option value="${m.id}">${esc(mesaLabel(m.id))}</option>`).join('');
-    $('transItens').innerHTML = its.map((i, idx) => `
-        <label class="flex items-center gap-2 bg-gray-900 rounded-lg p-2 text-sm cursor-pointer">
-            <input type="checkbox" data-idx="${idx}" checked class="accent-amber-500 w-4 h-4">
-            <span class="flex-1">${i.qtd}× ${esc(i.nome)}</span>
-            <span class="font-semibold">${fmt(i.preco * i.qtd)}</span>
-        </label>`).join('');
-    $('modalTransferir').classList.remove('hidden');
-}
-
-function confirmarTransferencia() {
-    if (nivel() < 3) { toast('Só o Gerente pode transferir itens entre mesas.'); return; }
-    const destino = Number($('transDestino').value);
-    const idxs = [...document.querySelectorAll('#transItens input:checked')].map(c => Number(c.dataset.idx));
-    if (!idxs.length) { toast('Selecione os itens a transferir.'); return; }
-    const origem = estado.mesaAtual;
-    const itens = itensAtuais();
-    const destArray = estado.comandas[destino] || (estado.comandas[destino] = []);
-    idxs.forEach(idx => {
-        const item = itens[idx];
-        const igual = destArray.find(d => d.id === item.id && d.preco === item.preco);
-        if (igual) igual.qtd += item.qtd;
-        else destArray.push({ ...item });
-    });
-    estado.comandas[origem] = itens.filter((_, idx) => !idxs.includes(idx));
-    guardar();
-    $('modalTransferir').classList.add('hidden');
-    renderMesasUI(); renderCarrinho();
-    toast(`Itens transferidos para ${mesaLabel(destino)}.`);
-}
-
-// ---------- Comanda de produção (cozinha/bar) ----------
-function imprimirComanda() {
-    const its = itensAtuais();
-    if (!its.length) { toast('Sem itens nesta mesa.'); return; }
-    // Agrupa por destino de produção
-    const grupos = {};
-    its.forEach(i => {
-        const p = produtos.find(x => x.id === i.id);
-        const d = p ? destinoDe(p) : 'Cozinha';
-        if (d === 'Nenhum') return;
-        (grupos[d] = grupos[d] || []).push(i);
-    });
-    if (!Object.keys(grupos).length) { toast('Nenhum item destina-se à cozinha/bar.'); return; }
-    const ordem = ['Cozinha', 'Bar'];
-    const secoes = ordem.filter(d => grupos[d]).concat(Object.keys(grupos).filter(d => !ordem.includes(d)));
-    const agora = new Date().toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-    $('areaImpressao').innerHTML = `
-        <div style="font-family:monospace" class="p-4">
-            <div class="text-center border-b border-dashed border-gray-500 pb-2 mb-3">
-                <h3 class="font-bold text-lg">${esc(config.loja || 'POSWD')}</h3>
-                <p class="text-sm font-bold tracking-wide">COMANDA DE PRODUÇÃO</p>
-                <p class="text-xs">Mesa: <b>${esc(mesaLabel(estado.mesaAtual))}</b> · ${agora}</p>
-                <p class="text-xs">Atendido por: ${esc(sessao() || '—')}</p>
-            </div>
-            ${secoes.map(d => `
-                <div class="mb-3">
-                    <p class="font-bold text-sm border-b border-gray-400 mb-1">${d.toUpperCase()}</p>
-                    ${grupos[d].map(i => `<div class="text-sm py-0.5"><b>${i.qtd}×</b> ${esc(i.nome)}</div>`).join('')}
-                </div>`).join('')}
-            <p class="text-center text-xs border-t border-dashed border-gray-500 pt-2">POSWD · ${esc(config.loja || '')}</p>
-        </div>`;
-    window.print();
-}
-
-// ---------- Gestão de produtos ----------
-function renderListaProdutos() {
-    $('listaProdutos').innerHTML = produtos.length ? produtos.map(p => `
-        <div class="flex items-center gap-2 bg-gray-900 rounded-lg p-2" data-id="${p.id}">
-            <div class="flex-1 min-w-0">
-                <span class="text-sm font-semibold">${esc(p.nome)}</span>
-                <span class="text-xs text-gray-500"> · ${esc(p.cat)}</span>
-            </div>
-            <select data-campo="destino" class="bg-gray-800 border border-gray-600 rounded px-1 py-1 text-xs focus:outline-none focus:border-amber-500">
-                ${DESTINOS.map(d => `<option ${destinoDe(p) === d ? 'selected' : ''}>${d}</option>`).join('')}
-            </select>
-            <input type="number" min="0" step="5" value="${p.preco}" data-campo="preco"
-                class="w-24 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-right focus:outline-none focus:border-amber-500">
-            <button data-acao="guardar" class="btn-mini bg-gray-700 hover:bg-green-700" title="Guardar alterações">&#x1F4BE;</button>
-            <button data-acao="apagar" class="btn-mini bg-gray-700 hover:bg-red-700" title="Eliminar">&#x1F5D1;</button>
-        </div>`).join('')
-        : '<p class="text-center text-gray-500 text-sm py-6">Sem produtos. Adicione o primeiro acima.</p>';
-    $('listaCats').innerHTML = [...new Set(produtos.map(p => p.cat))].map(c => `<option value="${esc(c)}">`).join('');
-}
-
-function addProduto(e) {
-    e.preventDefault();
-    if (nivel() < 3) { toast('Só o Gerente pode gerir produtos.'); return; }
-    const nome = $('pNome').value.trim();
-    const preco = parseFloat($('pPreco').value);
-    const cat = $('pCat').value.trim() || 'Geral';
-    const destino = $('pDestino').value || undefined; // vazio = automático por categoria
-    if (!nome || isNaN(preco) || preco < 0) { toast('Preencha nome e preço válidos.'); return; }
-    produtos.push({ id: Date.now(), nome, preco, cat, destino });
-    guardarProdutos();
-    $('formProduto').reset();
-    renderListaProdutos();
-    renderTabs();
-    renderProdutos();
-    toast(`Produto "${nome}" adicionado.`);
-}
-
-function cliqueListaProdutos(e) {
-    const row = e.target.closest('[data-id]');
-    if (!row) return;
-    if (nivel() < 3) { toast('Só o Gerente pode gerir produtos.'); return; }
-    const id = Number(row.dataset.id);
-    const acao = e.target.closest('[data-acao]')?.dataset.acao;
-    if (acao && nivel() < 3) { toast('Só o Gerente pode gerir produtos.'); return; }
-    if (acao === 'guardar') {
-        const p = produtos.find(x => x.id === id);
-        const novo = parseFloat(row.querySelector('[data-campo=preco]').value);
-        if (isNaN(novo) || novo < 0) { toast('Preço inválido.'); return; }
-        p.preco = novo;
-        p.destino = row.querySelector('[data-campo=destino]').value;
-        guardarProdutos();
-        renderProdutos();
-        toast(`"${p.nome}" atualizado (${p.preco} MT → ${p.destino}).`);
-    } else if (acao === 'apagar') {
-        const p = produtos.find(x => x.id === id);
-        if (!confirm(`Eliminar "${p.nome}" do catálogo?`)) return;
-        produtos = produtos.filter(x => x.id !== id);
-        guardarProdutos();
-        renderListaProdutos();
-        renderTabs();
-        renderProdutos();
-        toast(`Produto "${p.nome}" eliminado.`);
-    }
-}
-
-// ---------- Histórico de fechos + CSV ----------
-function renderHistorico() {
-    const hist = historico().slice().reverse();
-    $('listaHistorico').innerHTML = hist.length ? hist.map(h => `
-        <div class="bg-gray-900 rounded-lg p-3 text-sm space-y-1">
-            <div class="flex justify-between font-semibold">
-                <span>&#x1F4C5; ${dataHora(h.fechadoEm)}</span>
-                <span class="text-amber-400">${fmt(h.total)}</span>
-            </div>
-            <div class="flex justify-between text-xs text-gray-500">
-                <span>${h.nVendas} vendas</span>
-                <span>Dinheiro ${fmt(h.dinheiro)} · Cartão/MC ${fmt(h.cartao)}</span>
-            </div>
-            <div class="flex justify-between text-xs text-gray-500">
-                <span>Fundo: ${fmt(h.fundo)}</span>
-                <span>Esperado no caixa: <b class="text-green-400">${fmt(h.esperado)}</b></span>
-            </div>
-        </div>`).join('')
-        : '<p class="text-center text-gray-500 text-sm py-6">Nenhum fecho registado ainda.</p>';
-}
-
-function exportarCSV() {
-    const hist = historico();
-    if (!hist.length) { toast('Sem fechos para exportar.'); return; }
-    const linhas = [
-        ['Fecho', 'Abertura', 'Vendas', 'Dinheiro', 'Cartao_MC', 'IVA', 'Total', 'Esperado_no_Caixa'],
-        ...hist.map(h => [
-            new Date(h.fechadoEm).toLocaleString('pt-PT'),
-            new Date(h.abertoEm).toLocaleString('pt-PT'),
-            h.nVendas, h.dinheiro, h.cartao, (h.iva || 0).toFixed(2), h.total, h.esperado,
-        ]),
-    ];
-    const csv = '\uFEFF' + linhas.map(l => l.join(';')).join('\r\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `poswd_fechos_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(a.href);
-    toast('CSV exportado.');
-}
-
-// ---------- Definições (loja, NUIT, IVA) ----------
-function abrirConfig() {
-    $('inputLoja').value = config.loja || '';
-    $('inputNuit').value = config.nuit || '';
-    $('inputIva').value = config.iva;
-    $('modalConfig').classList.remove('hidden');
-}
-function guardarConfiguracao() {
-    if (nivel() < 3) { toast('Só o Gerente pode alterar as definições.'); return; }
-    const v = parseFloat($('inputIva').value);
-    if (isNaN(v) || v < 0 || v > 100) { toast('IVA inválido (0 a 100).'); return; }
-    config.iva = v;
-    config.loja = $('inputLoja').value.trim() || 'POSWD';
-    config.nuit = $('inputNuit').value.trim();
-    guardarConfig();
-    $('modalConfig').classList.add('hidden');
-    renderCarrinho();
-    toast('Definições guardadas.');
-}
-
-// ---------- Fecho do dia ----------
-function abrirFecho() {
-    if (nivel() < 1) { toast('Sem permissão para fechar o dia.'); return; }
-    const dinheiro = estado.vendas.filter(v => v.metodo === 'DINHEIRO').reduce((s, v) => s + v.total, 0);
-    const outros = totalVendido() - dinheiro;
-    const esperado = estado.fundo + dinheiro;
-    const ivaTotal = estado.vendas.reduce((s, v) => s + (v.iva || 0), 0);
-
-    const porCaixa = {};
-    estado.vendas.forEach(v => { porCaixa[v.caixa || '—'] = (porCaixa[v.caixa || '—'] || 0) + v.total; });
-
-    $('fechoPeriodo').textContent = `Aberto a ${dataHora(estado.abertoEm)}`;
-    $('fechoResumo').innerHTML = `
-        ${linha('Fundo de caixa inicial', fmt(estado.fundo))}
-        ${linha('Nº de vendas', estado.vendas.length)}
-        ${Object.entries(porCaixa).map(([cx, t]) => linha(`· Vendas de ${esc(cx)}`, fmt(t))).join('')}
-        ${linha('Vendas em dinheiro', fmt(dinheiro))}
-        ${linha('Vendas cartão/M-Pesa/e-Mola', fmt(outros))}
-        ${config.iva > 0 ? linha(`IVA incluído (${config.iva}%)`, fmt(ivaTotal)) : ''}
-        ${linha('Total vendido', fmt(totalVendido()), 'font-bold text-amber-400')}
-        <div class="border-t border-gray-600 my-2"></div>
-        ${linha('Dinheiro esperado no caixa', fmt(esperado), 'font-bold text-green-400')}`;
-
-    mostrar('tela-fecho');
-}
-
-function confirmarFecho() {
-    const dinheiro = estado.vendas.filter(v => v.metodo === 'DINHEIRO').reduce((s, v) => s + v.total, 0);
-    const hist = historico();
-    hist.push({
-        fechadoEm: new Date().toISOString(),
-        abertoEm: estado.abertoEm,
-        caixa: sessao() || '—',
-        fundo: estado.fundo,
-        nVendas: estado.vendas.length,
-        dinheiro,
-        cartao: totalVendido() - dinheiro,
-        total: totalVendido(),
-        iva: estado.vendas.reduce((s, v) => s + (v.iva || 0), 0),
-        esperado: estado.fundo + dinheiro,
-    });
-    localStorage.setItem('poswd_historico', JSON.stringify(hist));
-
-    estado = { aberto: false, abertoEm: null, fundo: 0, vendas: [], comandas: {}, mesaAtual: mesas()[0] ? mesas()[0].id : null, metodo: 'DINHEIRO', categoria: 'Tudo' };
-    guardar();
-
-    $('inputFundo').value = '';
-    renderAbertura();
-    mostrar('tela-dia');
-    toast('Dia fechado com sucesso.');
-}
-
-function renderStats() {
-    $('statsDia').textContent = `${estado.vendas.length} vendas · ${fmt(totalVendido())}`;
-}
-
-
-// ---------- Administração ----------
-// Níveis: 3 = Gerente/Admin (tudo) · 2 = Supervisor (estatísticas + CSV)
-//         1 = Caixa (vendas + fecho do dia) · 0 = Servente/Barman (vendas)
-function nivelDe(c) {
-    if (!c) return 0;
-    if (c.nome === 'Admin' || c.cargo === 'Gerente') return 3;
-    if (c.cargo === 'Supervisor') return 2;
-    if (c.cargo === 'Caixa') return 1;
-    return 0;
-}
-function nivel() { return nivelDe(caixas().find(x => x.nome === sessao())); }
-function isAdmin() { return nivel() >= 2; }  // quem vê o ecrã de administração
-
-function abrirAdmin() {
-    if (!isAdmin()) { toast('Acesso reservado ao administrador.'); return; }
-    renderAdmin();
-    mostrar('tela-admin');
-}
-
-function renderAdmin() {
-    const nv = nivel();
-    // Gerente (3): tudo · Supervisor (2): estatísticas + CSV + fechos
-    $('admCaixas').classList.toggle('hidden', nv < 3);
-    $('admProdutos').classList.toggle('hidden', nv < 3);
-    $('admConfig').classList.toggle('hidden', nv < 3);
-    $('admMesas').classList.toggle('hidden', nv < 3);
-    $('admBackup').classList.toggle('hidden', nv < 3);
-    $('admImportar').classList.toggle('hidden', nv < 3);
-    $('admReset').classList.toggle('hidden', nv < 3);
-    $('admCsv').classList.toggle('hidden', nv < 2);
-    const vendas = estado.vendas;
-    const total = totalVendido();
-    $('admTotal').textContent = fmt(total);
-    $('admVendas').textContent = vendas.length;
-    $('admTicket').textContent = fmt(vendas.length ? total / vendas.length : 0);
-
-    // Vendas por método
-    const porMetodo = {};
-    vendas.forEach(v => { porMetodo[v.metodo] = (porMetodo[v.metodo] || 0) + v.total; });
-    $('admMetodos').innerHTML = Object.keys(porMetodo).length
-        ? Object.entries(porMetodo).map(([m, t]) =>
-            `<div class="flex justify-between"><span class="text-gray-400">${m}</span><span class="font-semibold">${fmt(t)}</span></div>`).join('')
-        : '<p class="text-gray-500 text-xs">Sem vendas hoje.</p>';
-
-    // Top produtos por quantidade
-    const agg = {};
-    vendas.forEach(v => v.itens.forEach(i => {
-        agg[i.nome] = agg[i.nome] || { qtd: 0, total: 0 };
-        agg[i.nome].qtd += i.qtd;
-        agg[i.nome].total += i.preco * i.qtd;
-    }));
-    const top = Object.entries(agg).sort((a, b) => b[1].qtd - a[1].qtd).slice(0, 5);
-    $('admTop').innerHTML = top.length
-        ? top.map(([nome, d], n) =>
-            `<div class="flex justify-between"><span class="text-gray-400">${n + 1}. ${esc(nome)} <span class="text-xs">(${d.qtd}×)</span></span><span class="font-semibold">${fmt(d.total)}</span></div>`).join('')
-        : '<p class="text-gray-500 text-xs">Sem vendas hoje.</p>';
-}
-
-// ---------- Backup / Restauro / Reset ----------
-const CHAVES_DADOS = ['poswd_estado', 'poswd_produtos', 'poswd_historico', 'poswd_config', 'poswd_caixas', 'poswd_areas', 'poswd_mesas'];
-
-function backupJSON() {
-    if (nivel() < 3) { toast('Só o Gerente pode fazer backup.'); return; }
-    const dados = {};
-    CHAVES_DADOS.forEach(k => { dados[k] = localStorage.getItem(k); });
-    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `poswd_backup_${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(a.href);
-    toast('Backup transferido.');
-}
-
-function importarJSON(e) {
-    if (nivel() < 3) { toast('Só o Gerente pode restaurar backups.'); return; }
-    const f = e.target.files[0];
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-        try {
-            const dados = JSON.parse(reader.result);
-            const valido = dados && typeof dados === 'object' && dados['poswd_caixas'] && dados['poswd_produtos'];
-            if (!valido) throw new Error('formato');
-            if (!confirm('Restaurar este backup? Os dados atuais serão SUBSTITUÍDOS.')) return;
-            CHAVES_DADOS.forEach(k => {
-                if (dados[k] != null) localStorage.setItem(k, dados[k]);
-            });
-            sessionStorage.removeItem('poswd_sessao');
-            location.reload();
-        } catch (err) {
-            toast('Ficheiro de backup inválido.');
-        }
-    };
-    reader.readAsText(f);
-    e.target.value = '';
-}
-
-function resetarDados() {
-    if (nivel() < 3) { toast('Só o Gerente pode apagar os dados.'); return; }
-    if (!confirm('Apagar TODOS os dados (vendas, produtos, caixas, histórico)?')) return;
-    if (!confirm('Tem a certeza absoluta? Esta ação não pode ser anulada. Faça um backup primeiro!')) return;
-    CHAVES_DADOS.forEach(k => localStorage.removeItem(k));
-    sessionStorage.removeItem('poswd_sessao');
-    location.reload();
-}
-
-// ---------- Relógio ----------
-setInterval(() => {
-    $('relogio').textContent = new Date().toLocaleString('pt-PT', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}, 1000);
-
-// ---------- Eventos ----------
-function ligarEventos() {
-    $('btnEntrar').addEventListener('click', entrar);
-    $('inputPin').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
-    $('btnLogout').addEventListener('click', sair);
-
-    // Administração
-    $('btnAdmin').addEventListener('click', abrirAdmin);
-    $('btnVoltarAdmin').addEventListener('click', entrarPOS);
-    $('admCaixas').addEventListener('click', () => { renderListaCaixas(); $('modalCaixas').classList.remove('hidden'); });
-    $('admProdutos').addEventListener('click', () => { if (nivel() < 3) { toast('Só o Gerente pode gerir produtos.'); return; } renderListaProdutos(); $('modalProdutos').classList.remove('hidden'); });
-    $('admConfig').addEventListener('click', abrirConfig);
-    $('admHistorico').addEventListener('click', () => { renderHistorico(); $('modalHistorico').classList.remove('hidden'); });
-    $('admMesas').addEventListener('click', () => {
-        if (nivel() < 3) { toast('Só o Gerente pode gerir mesas.'); return; }
-        renderModalMesas(); $('modalMesas').classList.remove('hidden');
-    });
-    $('admCsv').addEventListener('click', exportarCSV);
-    $('admBackup').addEventListener('click', backupJSON);
-    $('admImportar').addEventListener('click', () => $('fileImport').click());
-    $('fileImport').addEventListener('change', importarJSON);
-    $('admReset').addEventListener('click', resetarDados);
-
-    $('btnAbrirDia').addEventListener('click', abrirDia);
-    $('inputFundo').addEventListener('keydown', e => { if (e.key === 'Enter') abrirDia(); });
-    $('inputFundo').addEventListener('input', () => $('erroAbertura').classList.add('hidden'));
-    $('btnHistDia').addEventListener('click', () => { renderHistorico(); $('modalHistorico').classList.remove('hidden'); });
-
-    $('tabsCategorias').addEventListener('click', e => {
-        const b = e.target.closest('.tab-cat');
-        if (!b) return;
-        estado.categoria = b.dataset.cat;
-        renderTabs(); renderProdutos();
-    });
-
-    $('gradeProdutos').addEventListener('click', e => {
-        const b = e.target.closest('.produto');
-        if (b) adicionarItem(Number(b.dataset.id));
-    });
-
-    $('listaItens').addEventListener('click', e => {
-        const b = e.target.closest('.qty');
-        if (!b) return;
-        const item = itensAtuais()[Number(b.dataset.idx)];
-        item.qtd += Number(b.dataset.op);
-        if (item.qtd <= 0) estado.comandas[estado.mesaAtual] = itensAtuais().filter(i => i !== item);
-        guardar(); renderCarrinho();
-    });
-
-    $('btnLimpar').addEventListener('click', () => {
-        estado.comandas[estado.mesaAtual] = [];
-        guardar(); renderCarrinho();
-    });
-
-    $('metodos').addEventListener('click', e => {
-        const b = e.target.closest('.metodo');
-        if (!b) return;
-        estado.metodo = b.dataset.metodo;
-        document.querySelectorAll('.metodo').forEach(m => m.classList.toggle('ativo', m === b));
-        atualizarTroco();
-    });
-
-    $('inputRecebido').addEventListener('input', atualizarTroco);
-    $('btnFinalizar').addEventListener('click', finalizarVenda);
-
-    $('btnFecharDia').addEventListener('click', abrirFecho);
-    $('btnVoltarFecho').addEventListener('click', entrarPOS);
-    $('btnConfirmarFecho').addEventListener('click', confirmarFecho);
-
-    $('btnFecharRecibo').addEventListener('click', () => $('modalRecibo').classList.add('hidden'));
-    $('btnImprimir').addEventListener('click', () => {
-        $('areaImpressao').innerHTML = $('reciboConteudo').innerHTML;
-        window.print();
-    });
-    $('btnComanda').addEventListener('click', imprimirComanda);
-
-    // Gestão de produtos
-    $('selMesa').addEventListener('change', () => {
-        estado.mesaAtual = Number($('selMesa').value);
-        guardar(); renderCarrinho();
-    });
-    $('btnTransferir').addEventListener('click', abrirTransferencia);
-    $('btnMesas').addEventListener('click', () => {
-        if (nivel() < 3) { toast('Só o Gerente pode gerir mesas.'); return; }
-        renderModalMesas(); $('modalMesas').classList.remove('hidden');
-    });
-    $('btnFecharMesas').addEventListener('click', () => $('modalMesas').classList.add('hidden'));
-    $('formArea').addEventListener('submit', addArea);
-    $('formMesa').addEventListener('submit', addMesa);
-    $('listaMesas').addEventListener('click', cliqueMesas);
-    $('btnCancelarTrans').addEventListener('click', () => $('modalTransferir').classList.add('hidden'));
-    $('btnConfirmarTrans').addEventListener('click', confirmarTransferencia);
-
-    $('btnProdutos').addEventListener('click', () => {
-        if (nivel() < 3) { toast('Só o Gerente pode gerir produtos.'); return; }
-        renderListaProdutos(); $('modalProdutos').classList.remove('hidden');
-    });
-    $('btnFecharProdutos').addEventListener('click', () => $('modalProdutos').classList.add('hidden'));
-    $('formProduto').addEventListener('submit', addProduto);
-    $('listaProdutos').addEventListener('click', cliqueListaProdutos);
-
-    // Histórico + CSV
-    $('btnHistorico').addEventListener('click', () => { renderHistorico(); $('modalHistorico').classList.remove('hidden'); });
-    $('btnFecharHistorico').addEventListener('click', () => $('modalHistorico').classList.add('hidden'));
-    $('btnExportCsv').addEventListener('click', exportarCSV);
-
-    // Caixas
-    $('btnCaixas').addEventListener('click', () => { renderListaCaixas(); $('modalCaixas').classList.remove('hidden'); });
-    $('btnFecharCaixas').addEventListener('click', () => $('modalCaixas').classList.add('hidden'));
-    $('formCaixa').addEventListener('submit', addCaixa);
-    $('listaCaixas').addEventListener('click', cliqueCaixas);
-
-    // Definições
-    $('btnConfig').addEventListener('click', abrirConfig);
-    $('btnFecharConfig').addEventListener('click', () => $('modalConfig').classList.add('hidden'));
-    $('btnGuardarConfig').addEventListener('click', guardarConfiguracao);
-
-    // Fechar modais ao clicar no fundo escuro
-    ['modalProdutos', 'modalHistorico', 'modalConfig', 'modalCaixas', 'modalMesas', 'modalTransferir'].forEach(id => {
-        $(id).addEventListener('click', e => { if (e.target === $(id)) $(id).classList.add('hidden'); });
-    });
-}
-
-// ---------- Arranque ----------
-document.addEventListener('DOMContentLoaded', () => {
-    // Registo do Service Worker (PWA / offline)
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(() => { /* ficheiro:// não suporta SW */ });
-    }
-    carregar();
-    ligarEventos();
-    if (sessao()) iniciar();
-    else mostrarLogin(true);
-});
-
-    </script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
